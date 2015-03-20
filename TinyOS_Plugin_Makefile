@@ -33,7 +33,7 @@
 #    Include TinyOS directory from the TinyOS-Contrib directory 
 #      PFLAGS+= -I${TOSDIR}/../contrib/xbow/beta/TASKApp
 # ----------------------------------------------------------------
-
+  
 
 
 # The environment variable COMPONENT is set automatically by the

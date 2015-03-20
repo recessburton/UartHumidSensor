@@ -1,2 +1,2 @@
 COMPONENT=UartHumidSensorAppC
-include $(MAKERULES)
+include $(MAKERULES)    
