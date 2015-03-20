@@ -64,8 +64,9 @@ implementation {
 	 * Uart Configuration
 	 *****************************************************************************************/ 
 
-	msp430_uart_union_config_t msp430_uart_config = {{ ubr : UBR_1MHZ_115200, // Baud rate (use enum msp430_uart_rate_t in msp430usart.h for predefined rates)
-			umctl : UMCTL_1MHZ_115200, // Modulation (use enum msp430_uart_rate_t in msp430usart.h for predefined rates)
+	msp430_uart_union_config_t msp430_uart_config = {{
+		    ubr : UBR_1MHZ_9600, // Baud rate (use enum msp430_uart_rate_t in msp430usart.h for predefined rates)
+			umctl : UMCTL_1MHZ_9600, // Modulation (use enum msp430_uart_rate_t in msp430usart.h for predefined rates)
 			ssel : 0x02, // Clock source (00=UCLKI; 01=ACLK; 10=SMCLK; 11=SMCLK)
 			pena : 0, // Parity enable (0=disabled; 1=enabled)
 			pev : 0, // Parity select (0=odd; 1=even)
