@@ -84,13 +84,13 @@ unsigned int calc_crc16 (unsigned char *snd, unsigned char num)
 /********************************************************************/
 int main(int argc, char *argv[ ] )
 {
-		unsigned char sbuf[8];		/*待发送的内容*/
+		unsigned char sbuf[8], databuf[17];	
 		unsigned char crc_ready[6]; /*待校验字符串*/
 		unsigned char constru;
 		unsigned char hd[max_buffer_size],*rbuf;
 		unsigned int vol,curr,index=0,crc_value=0;
 		rbuf=hd;
-		int sfd,retv,i,output_interval,function;
+		int sfd,retv,i,output_interval,function,data_index=0,ncount=0;
 		struct termios option;
     
     	int length=sizeof(sbuf);/*发送缓冲区数据宽度*/
@@ -110,7 +110,7 @@ int main(int argc, char *argv[ ] )
 		if(function<1 || function>2)
 		{
 			perror("输入错误，再见！");
-			return 1;
+			
 		}else if(function == 1)
 		{
 			printf("请连接绿色set线，输入设置读取时间间隔（0-255/s）：");
@@ -139,11 +139,19 @@ int main(int argc, char *argv[ ] )
 			if(retv==-1)
 				perror("发送命令出错！");
 
+			rbuf=hd; /*数据保存*/
+			ncount = 0;
 			memset(hd, max_buffer_size, 0);
+			while( ncount < 8) 
+			{			
+				retv=read(fd,rbuf,1);
+				rbuf++;
+				ncount++;
+				if(retv==-1)
+					perror("read");
+			}
 
-			retv=read(fd,rbuf,8);
-
-			if(rbuf[6] != (unsigned char)( crc_value & 0xFF) )
+			if(hd[6] != (unsigned char)( crc_value & 0xFF) )
 		    	{
 				perror("执行命令出错！");
 		     	}else{
@@ -151,7 +159,7 @@ int main(int argc, char *argv[ ] )
 		     	}
 		     	printf("返回信息：");
 		     	for(i=0; i< 8; i++)
-				printf("%02x ",sbuf[i]);  
+				printf("%02x ",hd[i]);  
 			putchar(10);
 		}
 		else{
@@ -159,10 +167,22 @@ int main(int argc, char *argv[ ] )
 			printf("读取信息：\n");
 			while(1)
 			{	
+				data_index++;
+				rbuf=hd; /*数据保存*/
+				ncount = 0;
 				memset(hd, max_buffer_size, 0);
-				retv=read(fd,rbuf,8);
-			     	for(i=0; i< 8; i++)
-					printf("%02x ",sbuf[i]);  
+				while( ncount < 17) 
+				{			
+					retv=read(fd,rbuf,1);
+					rbuf++;
+					ncount++;
+
+					if(retv==-1)
+						perror("read");
+				}
+				printf("%d: ",data_index);
+			     	for(i=0; i< 17; i++)
+					printf("%02x ",hd[i]);  
 				putchar(10);
 			}
 		}
