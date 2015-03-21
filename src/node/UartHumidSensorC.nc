@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include "UartHumidSensor.h"
+#include "printf.h"
 
 module UartHumidSensorC {
 	provides {
@@ -100,34 +101,27 @@ implementation {
 	}
 
 	event void Resource.granted() {
-
 		call UartStream.receive(capturedata, DATA_SIZE);
 	}
 
 	async event void UartStream.sendDone(uint8_t * buf, uint16_t len,
 			error_t error) {
-		if(error == SUCCESS) {
-			call Leds.led0Toggle();
-			call UartStream.receive(capturedata, DATA_SIZE); // Receive data message
-		}
-		else {
-			call UartStream.receive(capturedata, DATA_SIZE);
-		}
 	}
 
 	async event void UartStream.receivedByte(uint8_t byte) {
-
 	}
 
 	async event void UartStream.receiveDone(uint8_t * buf, uint16_t len,
 			error_t error) {
+		int i;
 		error_t result;
 		if(len == DATA_SIZE) {
 			call Leds.led2Toggle();
 			memcpy(capturedata, buf, DATA_SIZE);
-			capturedata[0] += 0x11;
-			capturedata[1] += 0x11;
-			result = call UartStream.send(capturedata, DATA_SIZE);
+			for (i=0;i<17;i++)
+				printf("%02x ",capturedata[i]);
+			printf("\n");
+			printfflush();
 		}
 		else {
 			call UartStream.receive(capturedata, DATA_SIZE);

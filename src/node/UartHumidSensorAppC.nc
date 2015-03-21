@@ -18,10 +18,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * ========================================================================
  */
 
+#define NEW_PRINTF_SEMANTICS
+
 configuration UartHumidSensorAppC {
 }
 implementation {
 	components MainC, UartHumidSensorC as App, LedsC;
+  
+	components PrintfC;
+	components SerialStartC;
 
 	MainC.Boot<-App;
 	App.Leds->LedsC;
