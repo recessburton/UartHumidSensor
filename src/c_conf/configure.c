@@ -113,7 +113,7 @@ int main(int argc, char *argv[ ] )
 			return 1;
 		}else if(function == 1)
 		{
-			printf("输入设置读取时间间隔（0-255，单位10ms）：");
+			printf("请连接绿色set线，输入设置读取时间间隔（0-255/s）：");
 			scanf("%d",&output_interval);
 			if(output_interval<0 || output_interval>255)
 			{
@@ -135,66 +135,40 @@ int main(int argc, char *argv[ ] )
 				printf("%02x ",sbuf[i]);  
 			putchar(10);
 			retv=write(fd,sbuf,length); /*发送控制命令数据*/
-				if(retv==-1)
-					perror("write");
-			return 0;
+
+			if(retv==-1)
+				perror("发送命令出错！");
+
+			memset(hd, max_buffer_size, 0);
+
+			retv=read(fd,rbuf,8);
+
+			if(rbuf[6] != (unsigned char)( crc_value & 0xFF) )
+		    	{
+				perror("执行命令出错！");
+		     	}else{
+		     		printf("执行命令成功！");
+		     	}
+		     	printf("返回信息：");
+		     	for(i=0; i< 8; i++)
+				printf("%02x ",sbuf[i]);  
+			putchar(10);
 		}
 		else{
+			printf(">>>>>>请断开绿色set线！\n");
+			printf("读取信息：\n");
 			while(1)
-			{
-
-				/*构造发送数据：
-				头部：1B,0x55
-				类型+序列号：3B：2b：类型，22b：序列号
-				数据：3B：12b：电压，12b：电流
-				尾部：1B，0xAA
-				*/
-
-				rbuf=hd;
-
-				sbuf[0] = (unsigned char)0x55;    //头部，固定
-				sbuf[1] = (unsigned char)((0x40)|((index&0x3F0000)>>16));    //前两个bit为类型，此处以10B电压源数据为例，后6bit为index前6位
-				sbuf[2] = (unsigned char)((index &0xFF00)>>8);    //去除头6bit后的一个字节
-				sbuf[3] = (unsigned char)(index & 0xFF);    //取index最后一个字节
-
-				srand((unsigned)time(NULL)*index);
-				vol = (unsigned int)(rand()%30+1);    //0.0-3.0V的随机数,此处扩大10倍
-				curr = (unsigned int)(rand()%50+1);  //0.00-0.50A的随机数，此处扩大100倍
-				sbuf[4] = (unsigned char)( (vol &0xFF0)>>4);//电压数据前八bit放入第一个Byte
-				sbuf[5] = (unsigned char)(((vol&0xF)<<4)|((curr &0xF00)>>8));//电压数据的后四位和电流数据的前4位
-				sbuf[6] = (unsigned char)(curr & 0xFF);//电流数据的后8位
-				sbuf[7] = (unsigned char)0xAA;        //尾部
-
-				index ++;
-
-				retv=write(fd,sbuf,length); /*接收数据*/
-				if(retv==-1)
-					perror("write");
-
-				printf("Raw vol: %d, Curr: %d\n",vol,curr);
-				printf("Sent data(Hex): %02x %02x %02x %02x     %02x %02x %02x %02x\n",sbuf[0],sbuf[1],sbuf[2],sbuf[3],sbuf[4],sbuf[5],sbuf[6],sbuf[7]);
-
-			   /* sleep(1);
-
-				printf("Ready for receiving data...\n");
-				retv=read(fd,rbuf,2);
-				if(retv==-1)
-				{
-						perror("read");
-				}else{
-						printf("The data received is:\n");
-						printf("0x%x  ",hd[0]);printf("0x%x",hd[1]);
-						printf("\n\n\n");
-				}*/
-
-				printf("\n\n\n");
-				usleep(100000);
-
+			{	
+				memset(hd, max_buffer_size, 0);
+				retv=read(fd,rbuf,8);
+			     	for(i=0; i< 8; i++)
+					printf("%02x ",sbuf[i]);  
+				putchar(10);
 			}
 		}
 		flag_close =close(fd);
-		if(flag_close == -1) /*判断是否成功关闭文件*/
-			printf("Close the Device failur！\n");
+		if(flag_close == -1) 
+			printf("设备移除失败！\n");
 
 		return 0;
 }
