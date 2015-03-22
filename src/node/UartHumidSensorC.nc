@@ -20,7 +20,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 #include "UartHumidSensor.h"
-#include "printf.h"
 
 module UartHumidSensorC {
 	provides {
@@ -33,6 +32,11 @@ module UartHumidSensorC {
 		// Uart
 		interface Resource;
 		interface UartStream;
+		
+		//AM
+		interface AMSend;
+		interface SplitControl as AMControl;
+		interface Packet;
 
 	}
 }
@@ -43,6 +47,9 @@ implementation {
 	 * Global Variables
 	 *****************************************************************************************/
 	uint8_t capturedata[DATA_SIZE];
+	volatile bool busy = FALSE;
+	SensorMsg * btrpkg = NULL;
+	message_t pkt;
 
 	/*****************************************************************************************
 	 * Task & function declaration
@@ -55,9 +62,8 @@ implementation {
 	 *****************************************************************************************/ 
 
 	event void Boot.booted() {
+		call AMControl.start();
 		call Leds.led0On();
-		call Leds.led1On();
-		call Leds.led2On();
 		post requestUART();
 	}
 
@@ -118,14 +124,42 @@ implementation {
 		if(len == DATA_SIZE) {
 			call Leds.led2Toggle();
 			memcpy(capturedata, buf, DATA_SIZE);
-			for (i=0;i<17;i++)
-				printf("%02x ",capturedata[i]);
-			printf("\n");
-			printfflush();
+			btrpkg = (SensorMsg * )(call Packet.getPayload(&pkt, NULL));
+			for(i=0;i<17;i++)
+			{
+				btrpkg->sensorInfo[i] = capturedata[i];
+			}
+			post releaseUART();
+			if(call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(SensorMsg)) == SUCCESS) {
+				busy = TRUE;
+			}
+			
 		}
 		else {
 			call UartStream.receive(capturedata, DATA_SIZE);
 		}
+	}
+	
+		//发送成功的话busy释放，
+	event void AMSend.sendDone(message_t * msg, error_t err) {
+		if(err == SUCCESS) {
+			call Leds.led1Toggle();
+			busy = FALSE;
+			call Resource.request();	
+		}
+	}
+
+	//启动芯片
+	event void AMControl.startDone(error_t err) {
+		if(err == SUCCESS) {
+			;
+		}
+		else {
+			call AMControl.start();
+		}
+	}
+
+	event void AMControl.stopDone(error_t err) {
 	}
 
 }// End 

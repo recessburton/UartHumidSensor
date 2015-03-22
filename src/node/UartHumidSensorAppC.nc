@@ -18,22 +18,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * ========================================================================
  */
 
-#define NEW_PRINTF_SEMANTICS
-
 configuration UartHumidSensorAppC {
 }
 implementation {
 	components MainC, UartHumidSensorC as App, LedsC;
-  
-	components PrintfC;
-	components SerialStartC;
+	components ActiveMessageC;
+ 	components new AMSenderC(AM_SENSOR_MSG);
 
 	MainC.Boot<-App;
 	App.Leds->LedsC;
 
-	// Msp430Uart0C is uart0 of MSP430F1611, pin 2 (RX) and 4 (TX) of 10 pin Expansion in telosb
-	// Msp430Uart1C is uart1 of MSP430F1611, converted to USB in telosb
-	//Msp430UartxC implements 3 import interfaces: Resource, UartStream, Msp430UartConfigure
+	App.AMControl -> ActiveMessageC;
+	App.AMSend -> AMSenderC;
+	App.Packet -> AMSenderC;
+
 	components new Msp430Uart1C() as UartC;
 	App.Resource->UartC.Resource;
 	App.UartStream->UartC.UartStream;

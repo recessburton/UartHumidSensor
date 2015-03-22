@@ -55,7 +55,6 @@ implementation {
 		call Leds.led0On();
 	}
 
-	//启动芯片
 	event void AMControl.startDone(error_t err) {
 		if(err == SUCCESS) {
 			;
@@ -89,6 +88,7 @@ implementation {
 			printfflush();
 			playload = NULL;
 		}
+		call Leds.led2Toggle();
 		return msg;
 	}
 
