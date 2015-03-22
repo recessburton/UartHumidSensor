@@ -1,0 +1,2 @@
+COMPONENT=BaseStationUartAppC
+include $(MAKERULES)    
